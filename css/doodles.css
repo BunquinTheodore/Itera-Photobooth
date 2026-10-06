@@ -1,0 +1,175 @@
+/*
+ * Itera Collectives Photobooth - doodles.css
+ * Owns: .doodle*, .doodle-draw, .icon, .is-drawn, .doodle-sprite, html.doodles-ready.
+ * Red-pen doodles live only in margins / under headings / between sections.
+ */
+
+/* ---------- Sprite container (injected by doodles.js) ---------- */
+.doodle-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ---------- Static icons: <svg class="icon"><use href="#id"></use></svg> ---------- */
+.icon {
+  display: inline-block;
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  color: var(--doodle-color, var(--color-pen, #8B1A1F));
+}
+
+.section--maroon .icon,
+.hero--dark .icon,
+.site-footer .icon {
+  color: var(--color-blush, #E8CFCF);
+}
+
+/* Icons inside controls follow the control's own text color. */
+:is(button, .btn, .lightbox) .icon {
+  color: inherit;
+}
+
+/* ---------- Decorative doodles ---------- */
+.doodle {
+  position: absolute;
+  display: block;
+  z-index: var(--z-doodle, 1);
+  height: auto;
+  pointer-events: none;
+  color: var(--doodle-color, var(--color-pen, #8B1A1F));
+}
+
+/* Zero-specificity default size (md) so core geometry rules always win. */
+:where(.doodle) {
+  width: 4.5rem;
+}
+
+.section--maroon .doodle,
+.hero--dark .doodle,
+.site-footer .doodle {
+  color: var(--color-blush, #E8CFCF);
+}
+
+.doodle__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  fill: none;
+}
+
+.doodle__svg--stretch {
+  height: 100%;
+}
+
+/* Placement: corners of the nearest .has-doodles box, inside the page margin */
+.doodle--tl { top: clamp(0.25rem, 2vw, 2rem); left: clamp(0.25rem, 2vw, 2rem); }
+.doodle--tr { top: clamp(0.25rem, 2vw, 2rem); right: clamp(0.25rem, 2vw, 2rem); }
+.doodle--bl { bottom: clamp(0.25rem, 2vw, 2rem); left: clamp(0.25rem, 2vw, 2rem); }
+.doodle--br { bottom: clamp(0.25rem, 2vw, 2rem); right: clamp(0.25rem, 2vw, 2rem); }
+.doodle--ml { top: 50%; left: clamp(0.25rem, 1vw, 1rem); transform: translateY(-50%); }
+.doodle--mr { top: 50%; right: clamp(0.25rem, 1vw, 1rem); transform: translateY(-50%); }
+
+/* Under a heading: geometry belongs to core (.section__header .doodle--under) */
+.doodle--under,
+.doodle--under-title {
+  pointer-events: none;
+}
+
+/* In text flow beside an accent word */
+.doodle--inline {
+  position: static;
+  display: inline-block;
+  width: 1.5em;
+  vertical-align: -0.2em;
+}
+
+/* Wraps a single accent word (stroke only, never blocks clicks) */
+.doodle--around {
+  position: absolute;
+  inset: -0.25em -0.4em;
+  width: auto;
+  height: auto;
+}
+
+/* Full-width wavy ink divider between / at the top of sections */
+.doodle--divider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 32px;
+  margin-block: 0;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* Sizes (do not combine with --divider/--under/--around/--inline/process lines) */
+.doodle--sm { width: 2.5rem; }
+.doodle--md { width: 4.5rem; }
+.doodle--lg { width: 7rem; }
+
+/* Visibility */
+.doodle--phone-only { display: none; }
+
+@media (max-width: 47.99em) {
+  :where(.doodle) { width: 3.15rem; }
+  .doodle--sm { width: 1.75rem; }
+  .doodle--md { width: 3.15rem; }
+  .doodle--lg { width: 4.9rem; }
+  .doodle--phone-only { display: block; }
+  .doodle--md-up,
+  .doodle--phone-hidden { display: none; }
+}
+
+@media (min-width: 48em) {
+  .doodle--phone-only { display: none; }
+}
+
+/* ---------- Draw-in animation (only when JS runs) ---------- */
+html.js .doodle-draw path {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1;
+}
+
+html.js .doodle-draw.is-drawn path {
+  animation-name: doodle-draw;
+  animation-duration: var(--dur-draw, 1200ms);
+  animation-timing-function: var(--ease-pen, cubic-bezier(0.45, 0.05, 0.25, 1));
+  animation-delay: calc(var(--doodle-delay, 0ms) + var(--path-delay, 0ms));
+  animation-fill-mode: forwards;
+}
+
+html.js .doodle--divider.is-drawn path,
+html.js .process__line.is-drawn path {
+  animation-duration: var(--dur-draw-long, 2000ms);
+}
+
+@keyframes doodle-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ---------- Reduced motion: fully drawn, no animation ---------- */
+html.reduced-motion .doodle-draw path,
+html.js.reduced-motion .doodle-draw.is-drawn path {
+  stroke-dashoffset: 0;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js .doodle-draw path,
+  html.js .doodle-draw.is-drawn path,
+  html.js .doodle--divider.is-drawn path,
+  html.js .process__line.is-drawn path {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+}

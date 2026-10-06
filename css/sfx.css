@@ -1,0 +1,84 @@
+/* Itera Collectives - sfx.css : mute toggle + flash overlay */
+
+.sfx-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--nav-fg, var(--color-ink, #2A1416));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.sfx-toggle__icon {
+  width: 1.5em;
+  height: 1.5em;
+  fill: none;
+  stroke: currentColor;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.sfx-toggle:hover {
+  background-color: rgba(139, 26, 31, 0.1);
+}
+
+.sfx-toggle:active,
+.sfx-toggle[aria-pressed="true"]:active {
+  transform: scale(0.92);
+}
+
+/* Sound ON: soft filled "pressed" look */
+.sfx-toggle[aria-pressed="true"] {
+  background-color: rgba(139, 26, 31, 0.08);
+}
+
+/* Sound OFF: dimmed icon */
+.sfx-toggle[aria-pressed="false"] .sfx-toggle__icon {
+  opacity: 0.75;
+}
+
+/* White camera-flash overlay */
+.sfx-flash {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: var(--z-flash, 1300);
+}
+
+.sfx-flash.is-firing {
+  animation: sfx-flash-fire 280ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) 1;
+}
+
+@keyframes sfx-flash-fire {
+  0% { opacity: 0; }
+  20% { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sfx-toggle,
+  .sfx-toggle__icon {
+    transition: none;
+  }
+
+  .sfx-toggle:active {
+    transform: none;
+  }
+
+  .sfx-flash,
+  .sfx-flash.is-firing {
+    display: none;
+    animation: none;
+  }
+}

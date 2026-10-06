@@ -1,0 +1,336 @@
+/*
+ * Itera Collectives Photobooth - motion.css
+ * Owns: .motion, .motion__art, .motion__svg, .motion-* , .has-motion, html.motion-ready.
+ * Per section looping motion graphics mounted by js/motion.js. Decorative only.
+ * Rules: transform / opacity / stroke-dashoffset only, paused while the section is
+ * offscreen, simplified on phones (.motion-x hidden), static final frame when
+ * prefers-reduced-motion. Sits below text (z -1 inside the section) and above the scene canvas.
+ */
+
+/* ---------- Container and placement ---------- */
+.has-motion { isolation: isolate; }
+
+.motion {
+  --m-ink: var(--color-maroon, #8B1A1F);
+  --m-paper: var(--color-cream, #FBF4F1);
+  --m-soft: var(--color-blush, #E8CFCF);
+  --m-gold: var(--color-gold, #C9A96E);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint;
+}
+
+.hero--dark .motion,
+.section--maroon .motion,
+.site-footer .motion {
+  --m-ink: var(--color-cream, #FBF4F1);
+  --m-paper: var(--color-maroon-dark, #6B1217);
+  --m-soft: rgba(232, 207, 207, 0.2);
+}
+
+.motion__art {
+  position: absolute;
+  width: min(calc(var(--mw, 8rem) * 0.62), calc(3.4rem / var(--ar, 0.7)));
+  opacity: 0.92;
+}
+
+.motion__svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.motion__art[data-pos="tl"] { top: 0.4rem; left: var(--gutter, 1rem); }
+.motion__art[data-pos="tr"] { top: 0.4rem; right: var(--gutter, 1rem); }
+.motion__art[data-pos="bl"] { bottom: 0.4rem; left: var(--gutter, 1rem); }
+.motion__art[data-pos="br"] { bottom: 0.4rem; right: var(--gutter, 1rem); }
+.motion__art[data-pos="hero"] {
+  top: 4.75rem; right: var(--gutter, 1rem); bottom: auto;
+  width: calc(var(--mw, 9rem) * 0.42);
+}
+
+@media (min-width: 48em) {
+  .motion__art { width: min(var(--mw, 8rem), calc(5rem / var(--ar, 0.7))); }
+  .motion__art[data-pos="hero"] { top: 50%; bottom: auto; width: var(--mw, 9rem); translate: 0 -50%; }
+}
+
+/* ---------- Pen vocabulary ---------- */
+.motion-pen {
+  fill: none;
+  stroke: var(--m-ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.motion-thin { stroke-width: 1.1; }
+.motion-thick { stroke-width: 2.4; }
+.motion-faint { opacity: 0.45; }
+.motion-gold { stroke: var(--m-gold); }
+.motion-cream { stroke: var(--color-cream, #FBF4F1); }
+.motion-nostroke { stroke: none; }
+.motion-ink-on-gold { stroke: var(--color-maroon-dark, #6B1217); stroke-width: 2.6; }
+.motion-f-paper { fill: var(--m-paper); }
+.motion-f-soft { fill: var(--m-soft); }
+.motion-f-gold { fill: var(--m-gold); }
+.motion-f-ink { fill: var(--m-ink); }
+
+.motion-pen[class*="motion-"],
+.motion__svg g,
+.motion__svg path {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.motion-sign-text {
+  fill: var(--color-maroon-dark, #6B1217);
+  font-family: var(--font-script, cursive);
+  font-size: 15px;
+  stroke: none;
+}
+
+/* ---------- Paused until the section is on screen ---------- */
+.motion *,
+.motion-shutter i { animation-play-state: paused; }
+.motion.is-live *,
+.motion-shutter.is-live i { animation-play-state: running; }
+/* User pause (WCAG 2.2.2) wins over the live state */
+html.motion-paused .motion *,
+html.motion-paused .motion-shutter i { animation-play-state: paused !important; }
+
+/* ---------- Static base frames (what reduced motion shows) ---------- */
+.motion-flash,
+.motion-flash-oled,
+.motion-spark { opacity: 0; }
+.motion-digit { opacity: 0; }
+.motion-digit--1 { opacity: 1; }
+.motion-plane { transform: translate(112px, 14px) rotate(-28deg); }
+.motion-hand--hour { transform: rotate(40deg); }
+
+/* ---------- 1 Hero: printing strip, flashing frames, curtain ripple ---------- */
+.motion-strip { animation: motion-print 8s var(--ease-out, ease-out) infinite; }
+.motion-flash { animation: motion-flash 8s ease-out infinite; animation-delay: calc(2.6s + var(--d, 0s)); }
+.motion-ripple { transform-origin: 50% 0; animation: motion-skew 4.2s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
+.motion-blink { animation: motion-blink 1.4s ease-in-out infinite alternate; }
+
+@keyframes motion-print {
+  0% { transform: translateY(-100px); opacity: 1; }
+  30%, 88% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0; }
+}
+@keyframes motion-flash {
+  0% { opacity: 0; }
+  3% { opacity: 0.9; }
+  14%, 100% { opacity: 0; }
+}
+@keyframes motion-skew { from { transform: skewX(-3deg); } to { transform: skewX(3deg); } }
+@keyframes motion-blink { from { opacity: 0.3; } to { opacity: 1; } }
+
+/* ---------- 2 About: iris and flash burst ---------- */
+.motion-aperture { animation: motion-aperture 4.5s ease-in-out infinite; }
+.motion-iris { animation: motion-iris 4.5s ease-in-out infinite; }
+.motion-burst { animation: motion-burst 4.5s ease-out infinite; }
+
+@keyframes motion-aperture {
+  0%, 35% { transform: scale(1); }
+  48%, 60% { transform: scale(0.25); }
+  78%, 100% { transform: scale(1); }
+}
+@keyframes motion-iris {
+  0%, 35% { transform: rotate(0deg); }
+  50%, 60% { transform: rotate(30deg); }
+  80%, 100% { transform: rotate(0deg); }
+}
+@keyframes motion-burst {
+  0%, 44% { opacity: 0; transform: scale(0.4); }
+  52% { opacity: 1; transform: scale(1.15); }
+  70%, 100% { opacity: 0; transform: scale(1.3); }
+}
+
+/* ---------- 3 Packages: clock and the +1 tick ---------- */
+.motion-hand--min { animation: motion-spin-min 7s linear infinite; }
+.motion-hand--hour { animation: motion-spin-hour 84s steps(120) infinite; }
+.motion-plus { animation: motion-plus 7s ease-out infinite; }
+
+@keyframes motion-spin-min { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes motion-spin-hour { from { transform: rotate(40deg); } to { transform: rotate(400deg); } }
+@keyframes motion-plus {
+  0% { transform: scale(0.2); opacity: 0; }
+  8% { transform: scale(1.2); opacity: 1; }
+  14%, 85% { transform: scale(1); opacity: 1; }
+  96%, 100% { transform: scale(0.8); opacity: 0; }
+}
+
+/* ---------- 4 Included: pulsing bars, countdown, strip into tray ---------- */
+.motion-bar { animation: motion-bar 1.6s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
+.motion-digit--3 { animation: motion-d3 7s linear infinite; }
+.motion-digit--2 { animation: motion-d2 7s linear infinite; }
+.motion-digit--1 { animation: motion-d1 7s linear infinite; }
+.motion-flash-oled { animation: motion-oled 7s ease-out infinite; }
+.motion-drop { animation: motion-drop 7s ease-out infinite; }
+
+@keyframes motion-bar { from { opacity: 0.3; } to { opacity: 1; } }
+@keyframes motion-d3 { 0% { opacity: 0; } 2%, 22% { opacity: 1; } 25%, 100% { opacity: 0; } }
+@keyframes motion-d2 { 0%, 26% { opacity: 0; } 28%, 47% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes motion-d1 { 0%, 51% { opacity: 0; } 53%, 66% { opacity: 1; } 70%, 100% { opacity: 0; } }
+@keyframes motion-oled { 0%, 66% { opacity: 0; } 69% { opacity: 0.9; } 78%, 100% { opacity: 0; } }
+@keyframes motion-drop {
+  0%, 70% { transform: translateY(-22px); opacity: 0; }
+  73% { opacity: 1; }
+  86%, 94% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0; }
+}
+
+/* ---------- 5 Layouts: frames fill one by one, a spark each ---------- */
+.motion-fill { animation: motion-fill 7s ease-out infinite; animation-delay: var(--d, 0s); }
+.motion-spark { animation: motion-spark 7s ease-out infinite; animation-delay: var(--d, 0s); }
+
+@keyframes motion-fill {
+  0% { opacity: 0; }
+  4%, 88% { opacity: 1; }
+  96%, 100% { opacity: 0; }
+}
+@keyframes motion-spark {
+  0% { opacity: 0; transform: scale(0.2); }
+  4% { opacity: 1; transform: scale(1.3); }
+  10%, 100% { opacity: 0; transform: scale(0.5); }
+}
+
+/* ---------- 6 Gallery: film marquee and twinkles ---------- */
+.motion-marquee { animation: motion-marquee 12s steps(48) infinite; }
+.motion-twinkle { animation: motion-twinkle 2.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+
+@keyframes motion-marquee { from { transform: translateX(0); } to { transform: translateX(-40px); } }
+@keyframes motion-twinkle {
+  0%, 100% { transform: scale(0.5); opacity: 0.35; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+/* ---------- 7 Where: pin drop, ripple rings, swinging sign ---------- */
+.motion-pin { animation: motion-pin 5s ease-in infinite; }
+.motion-ripple-ring { opacity: 0.6; animation: motion-ring 2.7s ease-out infinite; animation-delay: var(--d, 0s); }
+.motion-sign { animation: motion-swing 3s ease-in-out infinite alternate; }
+.motion-dash { stroke-dasharray: 3 4; animation: motion-march 2s linear infinite; }
+
+@keyframes motion-pin {
+  0% { transform: translateY(-50px); opacity: 0; }
+  12% { transform: translateY(0); opacity: 1; }
+  18% { transform: translateY(-12px); }
+  24% { transform: translateY(0); }
+  28% { transform: translateY(-4px); }
+  32%, 90% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0; }
+}
+@keyframes motion-ring {
+  0% { transform: scale(0.3); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes motion-swing { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
+@keyframes motion-march { to { stroke-dashoffset: -14; } }
+
+/* ---------- 8 Events: floating confetti, balloon, rings, sparkles ---------- */
+.motion-confetti { animation: motion-drift 3.6s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
+.motion-float { animation: motion-bob 3.2s ease-in-out infinite alternate; }
+.motion-float--b { animation-delay: 1s; }
+
+@keyframes motion-drift {
+  from { transform: translate(0, -3px) rotate(-14deg); }
+  to { transform: translate(2px, 5px) rotate(16deg); }
+}
+@keyframes motion-bob { from { transform: translateY(2px); } to { transform: translateY(-5px); } }
+
+/* ---------- 9 Process: marching trail, pen check marks ---------- */
+.motion-trail { stroke-dasharray: 4 5; animation: motion-march 1.6s linear infinite; }
+.motion-check { stroke-dasharray: 24; stroke-dashoffset: 0; animation: motion-check 7s ease-out infinite; animation-delay: var(--d, 0s); }
+
+@keyframes motion-check {
+  0% { stroke-dashoffset: 24; }
+  8%, 80% { stroke-dashoffset: 0; }
+  92%, 100% { stroke-dashoffset: 24; }
+}
+
+/* ---------- 10 FAQ: wiggling question mark, curtain that parts ---------- */
+.motion-wiggle { animation: motion-wiggle 2.4s ease-in-out infinite; }
+.motion-curtain { transition: transform 900ms var(--ease-out, ease-out); }
+.motion.is-open .motion-curtain--l { transform: translateX(-17px) scaleX(0.3); }
+.motion.is-open .motion-curtain--r { transform: translateX(17px) scaleX(0.3); }
+
+@keyframes motion-wiggle {
+  0%, 100% { transform: rotate(-6deg); }
+  25% { transform: rotate(6deg); }
+  50% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
+}
+
+/* ---------- 11 Inquiry: paper plane loop ---------- */
+.motion-trail--draw { opacity: 0.8; }
+
+@supports (offset-path: path("M0 0")) {
+  .motion-plane {
+    transform: none;
+    offset-path: path("M8 62C28 72 42 44 30 40C20 36 22 58 46 54C72 50 82 26 112 14");
+    offset-rotate: auto;
+    offset-distance: 100%;
+    animation: motion-fly 5.5s ease-in-out infinite;
+  }
+}
+@keyframes motion-fly {
+  0% { offset-distance: 0%; opacity: 0; }
+  6% { opacity: 1; }
+  80% { offset-distance: 100%; opacity: 1; }
+  92%, 100% { offset-distance: 100%; opacity: 0; }
+}
+
+/* Shutter ring around the send button */
+.motion-host { position: relative; overflow: visible; }
+.motion-shutter {
+  position: absolute;
+  inset: -6px;
+  border: 1.5px solid rgba(201, 169, 110, 0.6);
+  border-radius: 999px;
+  pointer-events: none;
+}
+.motion-shutter i {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--color-gold, #C9A96E);
+  border-radius: inherit;
+  animation: motion-shutter 2.6s ease-out infinite;
+}
+@keyframes motion-shutter {
+  0% { transform: scale(0.97); opacity: 0.9; }
+  100% { transform: scale(1.06, 1.45); opacity: 0; }
+}
+
+/* ---------- 12 Footer: waving flourish, tiny printing strip ---------- */
+.motion-wave { animation: motion-wave 6s ease-in-out infinite alternate; }
+.motion-ministrip { animation: motion-mini 6s ease-out infinite; }
+
+@keyframes motion-wave {
+  from { transform: rotate(-1.5deg) skewX(0deg); }
+  to { transform: rotate(1.5deg) skewX(-3deg); }
+}
+@keyframes motion-mini {
+  0% { transform: scaleY(0.08); opacity: 0.4; }
+  40%, 85% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
+
+/* ---------- Phones: fewer elements, softer ---------- */
+@media (max-width: 47.99em) {
+  .motion-x { display: none; }
+  .motion__art { opacity: 0.8; }
+}
+
+/* ---------- Reduced motion: static final frame ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .motion *,
+  .motion-shutter i {
+    animation: none !important;
+    transition: none !important;
+  }
+  .motion-shutter i { display: none; }
+}
+
+/* Footer top band is tighter than section padding */
+@media (min-width: 48em) {
+  .site-footer .motion__art { width: min(var(--mw, 11rem), calc(3.9rem / var(--ar, 0.41))); top: 0.25rem; }
+}

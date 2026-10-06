@@ -1,0 +1,150 @@
+/* ==========================================================================
+   scene.css - fixed Three.js background layer + static CSS fallback.
+   Owner: scene engineer. Prefix: .scene*, html.scene-live, html.scene-static.
+   Layer: var(--z-canvas). Never captures pointer events.
+   ========================================================================== */
+
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-canvas, 0);
+  pointer-events: none;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    var(--color-maroon-deep, #4A0C10) 0%,
+    var(--color-maroon, #8B1A1F) 55%,
+    var(--color-maroon-dark, #6B1217) 100%
+  );
+}
+
+/* Cream/blush wash that grows as the page scrolls past the hero.
+   --scene-wash (0..1) is written by scene.js; absent = 0 (no wash). */
+.scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    var(--color-blush-soft, #F4E6E3) 0%,
+    var(--color-blush, #E8CFCF) 100%
+  );
+  opacity: calc(var(--scene-wash, 0) * 0.7);
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.scene__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+html.scene-live .scene__canvas {
+  opacity: 1;
+}
+
+/* Once the one time fade in is done, per frame opacity writes must not restart a transition */
+html.scene-settled .scene__canvas {
+  transition: none;
+}
+
+/* ---------- Static fallback (always present, visible until scene-live) ---------- */
+
+.scene__fallback {
+  position: absolute;
+  inset: 0;
+  opacity: 1;
+  transition: opacity 600ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(163, 48, 54, 0.35), transparent 60%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(74, 12, 16, 0.5) 0,
+      rgba(139, 26, 31, 0) 2.5rem,
+      rgba(163, 48, 54, 0.18) 4.5rem,
+      rgba(107, 18, 23, 0.4) 7rem,
+      rgba(74, 12, 16, 0.5) 9rem
+    );
+}
+
+/* visibility:hidden (after the fade) also stops the fallback strips' float animations */
+html.scene-live .scene__fallback {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 600ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)), visibility 0s linear 600ms;
+}
+
+.scene__strip {
+  --scene-rot: 0deg;
+  position: absolute;
+  display: block;
+  width: clamp(2.75rem, 6vw, 5.5rem);
+  aspect-ratio: 1 / 3.4;
+  border-radius: 3px;
+  opacity: 0.8;
+  background-color: var(--color-cream, #FBF4F1);
+  background-image:
+    linear-gradient(var(--color-blush, #E8CFCF), var(--color-blush, #E8CFCF)),
+    linear-gradient(var(--color-blush, #E8CFCF), var(--color-blush, #E8CFCF)),
+    linear-gradient(var(--color-blush, #E8CFCF), var(--color-blush, #E8CFCF));
+  background-repeat: no-repeat;
+  background-size: 76% 24%, 76% 24%, 76% 24%;
+  background-position: 50% 5%, 50% 38%, 50% 71%;
+  box-shadow: 0 10px 28px rgba(74, 12, 16, 0.35);
+  transform: translate3d(0, 0, 0) rotate(var(--scene-rot));
+  animation: scene-float 18s ease-in-out infinite alternate;
+}
+
+.scene__strip--1 { --scene-rot: 8deg;  top: 8%;     right: 6%;  animation-duration: 16s; }
+.scene__strip--2 { --scene-rot: -6deg; top: 44%;    right: 20%; animation-duration: 21s; background-color: var(--color-blush, #E8CFCF); }
+.scene__strip--3 { --scene-rot: 10deg; bottom: 6%;  left: 3%;   animation-duration: 19s; }
+.scene__strip--4 { --scene-rot: -8deg; bottom: 8%;  right: 3%;  animation-duration: 14s; background-color: var(--color-maroon, #8B1A1F); }
+.scene__strip--5 { --scene-rot: 5deg;  top: 14%;    left: 10%;  animation-duration: 22s; }
+
+@keyframes scene-float {
+  from { transform: translate3d(0, 0, 0) rotate(var(--scene-rot)); }
+  to   { transform: translate3d(0, -1.5rem, 0) rotate(calc(var(--scene-rot) + 3deg)); }
+}
+
+/* Phones: fewer, fainter strips so text stays clear. */
+@media (max-width: 47.99em) {
+  .scene__strip {
+    opacity: 0.45;
+    width: clamp(2.25rem, 9vw, 3.5rem);
+  }
+
+  .scene__strip--4,
+  .scene__strip--5 {
+    display: none;
+  }
+}
+
+/* Static scene (no WebGL / reduced motion): the hero is transparent, so keep strips
+   out of the hero text area and give the text a solid panel (WCAG 1.4.3). */
+html.scene-static .scene__strip--5 { display: none; }
+html.scene-static .hero__content::before {
+  background: radial-gradient(farthest-corner at 50% 50%, rgba(74, 12, 16, 0.92) 0%, rgba(74, 12, 16, 0.92) 85%, rgba(74, 12, 16, 0) 100%);
+}
+@media (max-width: 47.99em) {
+  html.scene-static .scene__strip--2,
+  html.scene-static .scene__strip--3 { display: none; }
+}
+
+/* User-chosen pause (WCAG 2.2.2) */
+html.motion-paused .scene__strip { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-toggle { display: none; }
+  .scene__strip { animation: none; }
+  .scene__canvas { display: none; }
+}
+
+html.reduced-motion .scene__strip { animation: none; }
+html.reduced-motion .motion-toggle { display: none; }
+html.reduced-motion .scene__canvas { display: none; }
+html.scene-static .scene__canvas { display: none; }

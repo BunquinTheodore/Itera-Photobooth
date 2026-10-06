@@ -1,0 +1,431 @@
+/* Itera Collectives - animations.css (owner: animation engineer)
+   Scroll reveals, text splitting, hero sequence, printer strips, developing photos,
+   sticky header blur/shrink. Only transform / opacity animate, with the documented
+   exceptions (clip-path on hero script + printer, filter on .photo__img, backdrop-filter on header).
+   Every hidden initial state is gated by html.js and cancelled by html.no-anim,
+   html.reduced-motion and the prefers-reduced-motion media query (bottom of file).
+   Reveal animations use fill-mode "backwards" so, once finished, elements fall back to
+   their natural styles and never override hover transforms owned by other files. */
+
+/* ------------------------------------------------------------------ */
+/* Keyframes                                                           */
+/* ------------------------------------------------------------------ */
+
+@keyframes anim-reveal-up   { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes anim-reveal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes anim-reveal-left { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: none; } }
+@keyframes anim-reveal-right { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: none; } }
+@keyframes anim-reveal-pop  { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes anim-stagger-up  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes anim-stagger-pop { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: none; } }
+@keyframes anim-word-up     { from { transform: translateY(110%); } to { transform: none; } }
+@keyframes anim-char-rise   { from { opacity: 0; transform: translateY(110%) rotate(4deg); } to { opacity: 1; transform: none; } }
+@keyframes anim-line-in     { from { opacity: 0; transform: translateY(0.8em); } to { opacity: 1; transform: none; } }
+@keyframes anim-fade-in     { from { opacity: 0; } to { opacity: 1; } }
+@keyframes anim-hero-pen {
+  0%   { clip-path: inset(-0.4em 100% -0.4em -0.3em); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { clip-path: inset(-0.4em -0.3em -0.4em -0.3em); opacity: 1; }
+}
+@keyframes anim-develop {
+  from { filter: blur(10px) grayscale(1) contrast(0.9); opacity: 0.55; }
+  to   { filter: none; opacity: 1; }
+}
+@keyframes anim-print {
+  0%   { transform: translateY(-102%) rotate(0deg); }
+  70%  { transform: translateY(1.5%) rotate(1.8deg); }
+  86%  { transform: translateY(0) rotate(-0.8deg); }
+  100% { transform: none; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Scroll reveal: [data-reveal]                                        */
+/* ------------------------------------------------------------------ */
+
+html.js [data-reveal]:not(.is-revealed) { opacity: 0; transform: translateY(24px); }
+html.js [data-reveal="fade"]:not(.is-revealed) { transform: none; }
+html.js [data-reveal="left"]:not(.is-revealed) { transform: translateX(-32px); }
+html.js [data-reveal="right"]:not(.is-revealed) { transform: translateX(32px); }
+html.js [data-reveal="pop"]:not(.is-revealed) { transform: scale(0.92); }
+
+html.js [data-reveal].is-revealed {
+  animation: anim-reveal-up var(--dur-reveal, 800ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--reveal-delay, 0ms) backwards;
+}
+html.js [data-reveal="fade"].is-revealed  { animation-name: anim-reveal-fade; }
+html.js [data-reveal="left"].is-revealed  { animation-name: anim-reveal-left; }
+html.js [data-reveal="right"].is-revealed { animation-name: anim-reveal-right; }
+html.js [data-reveal="pop"].is-revealed   { animation-name: anim-reveal-pop; }
+
+/* ------------------------------------------------------------------ */
+/* Staggered children: [data-stagger] > *                              */
+/* ------------------------------------------------------------------ */
+
+html.js [data-stagger]:not(.is-revealed) > *:not(.doodle) { opacity: 0; transform: translateY(20px); }
+html.js [data-stagger="pop"]:not(.is-revealed) > *:not(.doodle) { transform: scale(0.7); }
+
+html.js [data-stagger].is-revealed > *:not(.doodle) {
+  animation: anim-stagger-up var(--dur-reveal, 800ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1))
+    calc(var(--i, 0) * var(--stagger-item, 110ms)) backwards;
+}
+html.js [data-stagger="pop"].is-revealed > *:not(.doodle) {
+  animation-name: anim-stagger-pop;
+  animation-duration: var(--dur-slow, 700ms);
+  animation-timing-function: var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+/* ------------------------------------------------------------------ */
+/* Text splitting: [data-split] (hero line is handled by the hero block) */
+/* ------------------------------------------------------------------ */
+
+html.js [data-split]:not([data-hero-line]):not(.is-split):not(.is-revealed) { opacity: 0; }
+
+.split-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding: 0.05em 0.06em 0.12em;
+  margin: 0 -0.06em;
+}
+.split-word__inner { display: inline-block; }
+.split-group { display: inline-block; white-space: nowrap; }
+.split-char { display: inline-block; }
+.split-line { display: block; overflow: hidden; }
+.split-line__inner { display: block; }
+
+html.js [data-split="words"]:not(.is-revealed) .split-word__inner { transform: translateY(110%); }
+html.js [data-split="words"].is-revealed .split-word__inner {
+  animation: anim-word-up var(--dur-word, 700ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1))
+    calc(var(--i, 0) * var(--stagger-word, 70ms)) backwards;
+}
+
+html.js [data-split="chars"]:not([data-hero-line]):not(.is-revealed) .split-char { opacity: 0; transform: translateY(110%) rotate(4deg); }
+html.js [data-split="chars"]:not([data-hero-line]).is-revealed .split-char {
+  animation: anim-char-rise var(--dur-char, 700ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1))
+    calc(var(--i, 0) * var(--stagger-char, 45ms)) backwards;
+}
+
+html.js [data-split="lines"]:not(.is-revealed) .split-line__inner,
+html.js .split-whole:not(.is-revealed) { opacity: 0; transform: translateY(0.8em); }
+html.js [data-split="lines"].is-revealed .split-line__inner {
+  animation: anim-line-in var(--dur-reveal, 800ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1))
+    calc(var(--i, 0) * var(--stagger-line, 90ms)) backwards;
+}
+html.js .split-whole.is-revealed {
+  animation: anim-line-in var(--dur-reveal, 800ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) backwards;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero sequence (~2.2s total; starts when animations.js adds .hero--ready)          */
+/* ------------------------------------------------------------------ */
+
+html.js .hero {
+  --anim-script-delay: 0ms;
+  --anim-bold-delay: 500ms;
+  --anim-outline-delay: 1000ms;
+  --anim-fill-delay: 1300ms;
+  --anim-fade-delay: 1000ms;
+}
+
+/* before the sequence starts */
+html.js .hero:not(.hero--ready) [data-hero-line] { opacity: 0; }
+html.js .hero:not(.hero--ready) [data-hero-fade] { opacity: 0; transform: translateY(16px); }
+
+/* outline stage: stroked, transparent fill; ::after carries the filled copy */
+html.js .hero__outline {
+  position: relative;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-cream, #FBF4F1);
+}
+html.js .hero__outline::after {
+  content: attr(data-text);
+  content: attr(data-text) / "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: inherit;
+  white-space: nowrap;
+  color: var(--color-cream, #FBF4F1);
+  -webkit-text-stroke: 0;
+  pointer-events: none;
+}
+
+/* 1. "Elevated" pen-writes */
+html.js .hero--ready .hero__script {
+  animation: anim-hero-pen var(--dur-script, 1400ms) var(--ease-pen, cubic-bezier(0.45, 0.05, 0.25, 1)) var(--anim-script-delay) both;
+}
+/* 2. PHOTOBOOTH letters rise */
+html.js .hero--ready .hero__bold .split-char {
+  animation: anim-char-rise var(--dur-char, 700ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1))
+    calc(var(--anim-bold-delay) + var(--i, 0) * var(--stagger-char, 45ms)) both;
+}
+/* 3. EXPERIENCE outline appears, then fills */
+html.js .hero--ready .hero__outline {
+  animation: anim-fade-in 600ms ease-out var(--anim-outline-delay) both;
+}
+html.js .hero--ready .hero__outline::after {
+  animation: anim-fade-in 800ms ease-out var(--anim-fill-delay) both;
+}
+/* 4. tagline, actions, meta fade up in DOM order */
+html.js .hero--ready [data-hero-fade] {
+  animation: anim-reveal-up var(--dur-reveal, 800ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1))
+    calc(var(--anim-fade-delay) + var(--i, 0) * var(--stagger-line, 90ms)) both;
+}
+
+/* will-change only while the sequence runs */
+html.js .hero.hero--ready:not(.hero--done) .hero__script,
+html.js .hero.hero--ready:not(.hero--done) .hero__bold .split-char,
+html.js .hero.hero--ready:not(.hero--done) [data-hero-fade] { will-change: transform, opacity; }
+
+/* skipped / finished: drop every animation, natural (final) styles remain */
+html.js .hero.hero--done .hero__script,
+html.js .hero.hero--done .hero__bold .split-char,
+html.js .hero.hero--done .hero__outline,
+html.js .hero.hero--done .hero__outline::after,
+html.js .hero.hero--done [data-hero-fade] { animation: none; }
+
+/* ------------------------------------------------------------------ */
+/* Printer strips (layouts)                                            */
+/* ------------------------------------------------------------------ */
+
+html.js [data-printer] { clip-path: inset(0); }
+html.js [data-printer]:not(.is-printed) .printer__strip { transform: translateY(-102%); }
+html.js [data-printer].is-printed .printer__strip {
+  animation: anim-print var(--dur-print, 1100ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) backwards;
+}
+
+/* ------------------------------------------------------------------ */
+/* Developing photos                                                   */
+/* ------------------------------------------------------------------ */
+
+html.js [data-develop]:not(.is-developed) .photo__img {
+  filter: blur(10px) grayscale(1) contrast(0.9);
+  opacity: 0.55;
+}
+html.js [data-develop].is-developed .photo__img {
+  animation: anim-develop var(--dur-develop, 1400ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--reveal-delay, 0ms) backwards;
+}
+
+/* will-change only during an active animation (class toggled by animations.js) */
+html.js .is-animating { will-change: transform, opacity; }
+html.js [data-stagger].is-animating > * { will-change: transform, opacity; }
+html.js [data-printer].is-animating .printer__strip { will-change: transform; }
+html.js [data-split].is-animating .split-word__inner,
+html.js [data-split].is-animating .split-char,
+html.js [data-split].is-animating .split-line__inner { will-change: transform, opacity; }
+
+/* ------------------------------------------------------------------ */
+/* Per section entrances: [data-ax="kind"] tagged by animations.js,    */
+/* revealed by adding .ax-in. --ax-i / --ax-step / --ax-d set inline.   */
+/* ------------------------------------------------------------------ */
+
+@keyframes ax-rise    { from { opacity: 0; transform: translateY(44px); } to { opacity: 1; transform: none; } }
+@keyframes ax-line    { from { opacity: 0; transform: translateY(0.8em); } to { opacity: 1; transform: none; } }
+@keyframes ax-fade    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ax-late    { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes ax-slide   { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+@keyframes ax-cascade { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes ax-light {
+  0%   { opacity: 0.25; transform: translateY(12px); }
+  60%  { opacity: 1; transform: translateY(0) scale(1.03); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ax-flare { 0% { transform: scale(1); } 45% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes ax-fan {
+  0%   { opacity: 0; transform: translate(-36px, 44px) rotate(var(--ax-r, -8deg)) scale(0.86); }
+  60%  { opacity: 1; transform: translate(0, -4px) rotate(calc(var(--ax-r, -8deg) * -0.35)) scale(1.01); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ax-pin {
+  0%   { opacity: 0; transform: translateY(-38px) scale(1.4); }
+  55%  { opacity: 1; transform: translateY(0) scale(0.95); }
+  75%  { transform: translateY(-5px) scale(1); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ax-twinkle {
+  0%   { opacity: 0; transform: scale(0) rotate(-30deg); }
+  50%  { opacity: 1; transform: scale(1.35) rotate(10deg); }
+  72%  { transform: scale(0.85) rotate(0deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ax-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes ax-pulse { 0%, 100% { transform: none; } 30% { transform: scale(1.025); } 60% { transform: scale(0.992); } 80% { transform: scale(1.012); } }
+@keyframes ax-flash { 0%, 100% { opacity: 0; } 35% { opacity: 0.8; } 65% { opacity: 0.1; } 80% { opacity: 0.55; } }
+@keyframes ax-status-pop { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes ax-shake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+@keyframes ax-error-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* hosts for absolutely placed doodles */
+.tier--featured, .included__item, .event-card, .where__photo, .faq__answer, .form__submit { position: relative; }
+.form__submit { overflow: hidden; }
+
+.ax-tick { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; pointer-events: none; }
+.ax-ring { position: absolute; top: -12px; left: -12px; width: calc(100% + 24px); height: calc(100% + 24px); overflow: visible; pointer-events: none; }
+.ax-sparkle { position: absolute; top: -9px; right: -7px; width: 18px; height: 18px; pointer-events: none; }
+.ax-pin { position: absolute; top: -14px; left: 50%; z-index: 3; width: 24px; height: 34px; margin-left: -12px; pointer-events: none; }
+.ax-flash { position: absolute; inset: 0; border-radius: inherit; background: var(--color-cream, #FBF4F1); opacity: 0; pointer-events: none; }
+.ax-faq-tick { position: absolute; top: 2px; right: 4px; width: 22px; height: 22px; pointer-events: none; }
+
+/* hidden initial states (only elements animations.js tagged, so no JS means fully visible) */
+html.js [data-ax="rise"]:not(.ax-in)    { opacity: 0; transform: translateY(44px); }
+html.js [data-ax="line"]:not(.ax-in)    { opacity: 0; transform: translateY(0.8em); }
+html.js [data-ax="fade"]:not(.ax-in),
+html.js [data-ax="late"]:not(.ax-in)    { opacity: 0; }
+html.js [data-ax="slide"]:not(.ax-in)   { opacity: 0; transform: translateX(-30px); }
+html.js [data-ax="cascade"]:not(.ax-in) { opacity: 0; transform: translateY(22px); }
+html.js [data-ax="light"]:not(.ax-in)   { opacity: 0.25; transform: translateY(12px); }
+html.js [data-ax="fan"]:not(.ax-in),
+html.js [data-ax="pin"]:not(.ax-in),
+html.js [data-ax="twinkle"]:not(.ax-in) { opacity: 0; }
+html.js [data-ax="fan"]:not(.ax-in)     { transform: translate(-36px, 44px) rotate(var(--ax-r, -8deg)) scale(0.86); }
+html.js [data-ax="tick"] path,
+html.js [data-ax="ring"] path,
+html.js .ax-faq-tick path { stroke-dasharray: 1 2; stroke-dashoffset: 0; }
+html.js [data-ax="tick"]:not(.ax-in) path,
+html.js [data-ax="ring"]:not(.ax-in) path,
+html.js .ax-faq-tick path { stroke-dashoffset: 1; }
+
+/* revealed: one finite animation each, fill backwards so natural styles remain after */
+html.js [data-ax].ax-in {
+  --ax-delay: calc(var(--ax-d, 0ms) + var(--ax-i, 0) * var(--ax-step, 100ms));
+}
+html.js [data-ax="rise"].ax-in    { animation: ax-rise 850ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="line"].ax-in    { animation: ax-line 800ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="fade"].ax-in    { animation: ax-fade 700ms ease-out var(--ax-delay) backwards; }
+html.js [data-ax="late"].ax-in    { animation: ax-late 700ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="slide"].ax-in   { animation: ax-slide 650ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="cascade"].ax-in { animation: ax-cascade 700ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="light"].ax-in   { animation: ax-light 800ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="light"].ax-in .step__num { animation: ax-flare 700ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="fan"].ax-in     { animation: ax-fan 1000ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="pin"].ax-in     { animation: ax-pin 700ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="twinkle"].ax-in { animation: ax-twinkle 800ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="tick"].ax-in path  { animation: ax-draw 520ms var(--ease-pen, cubic-bezier(0.45, 0.05, 0.25, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="ring"].ax-in path  { animation: ax-draw 1300ms var(--ease-pen, cubic-bezier(0.45, 0.05, 0.25, 1)) var(--ax-delay) backwards; }
+html.js [data-ax="pulse"].ax-in   { animation: ax-pulse 900ms ease-in-out var(--ax-delay) backwards; }
+html.js [data-ax="flash"].ax-in   { animation: ax-flash 900ms ease-out var(--ax-delay) both; }
+
+/* FAQ: pen tick draws beside the answer each time an item opens */
+html.js .faq__item[open] .ax-faq-tick path { animation: ax-draw 520ms var(--ease-pen, cubic-bezier(0.45, 0.05, 0.25, 1)) 260ms forwards; }
+
+/* inquiry form states */
+.form__status[data-state="success"] { animation: ax-status-pop 600ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) backwards; }
+.form__status[data-state="error"]   { animation: ax-shake 500ms ease-in-out backwards; }
+.form__status[data-state="sending"] { animation: ax-fade 300ms ease-out backwards; }
+.form__error:not([hidden])          { animation: ax-error-in 300ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) backwards; }
+.form__field.is-invalid .form__input { animation: ax-shake 420ms ease-in-out; }
+
+/* will-change only on the elements mid-entrance is skipped on purpose: short one-shot animations */
+
+/* ------------------------------------------------------------------ */
+/* Sticky header: blur layer + logo shrink (.is-scrolled set by JS)    */
+/* Colors / link styles stay in styles.css.                            */
+/* ------------------------------------------------------------------ */
+
+html.js .site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(251, 244, 241, 0.96); /* near-opaque instead of backdrop blur: no per-frame blur over the canvas */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base, 300ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+html.js .site-header.is-scrolled::before { opacity: 1; }
+
+html.js .site-header .brand {
+  transform-origin: left center;
+  transition: transform var(--dur-base, 300ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+html.js .site-header.is-scrolled .brand { transform: scale(0.85); }
+
+/* ------------------------------------------------------------------ */
+/* Safety nets: html.no-anim (contract 2.2, verbatim list) + reduced    */
+/* motion. These are the only !important rules in this file.           */
+/* ------------------------------------------------------------------ */
+
+html.no-anim [data-reveal],
+html.no-anim [data-stagger] > *,
+html.no-anim [data-split],
+html.no-anim [data-develop] .photo__img,
+html.no-anim [data-printer] .printer__strip,
+html.no-anim [data-hero-line],
+html.no-anim .doodle-draw path {
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+  filter: none !important;
+  animation: none !important;
+  stroke-dashoffset: 0 !important;
+}
+
+/* extensions for the split children, hero fades and the outline fill */
+:is(html.no-anim, html.reduced-motion) :is([data-hero-fade], .split-word__inner, .split-char, .split-line__inner, .split-whole, .hero__script, .hero__bold, .hero__outline, [data-printer]) {
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+  filter: none !important;
+  animation: none !important;
+}
+:is(html.no-anim, html.reduced-motion) .hero__outline {
+  color: var(--color-cream, #FBF4F1) !important;
+  -webkit-text-stroke: 0 !important;
+}
+:is(html.no-anim, html.reduced-motion) .hero__outline::after { display: none !important; animation: none !important; }
+:is(html.no-anim, html.reduced-motion) :is([data-reveal], [data-stagger] > *, [data-split], [data-develop] .photo__img, [data-printer] .printer__strip) {
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+  filter: none !important;
+  animation: none !important;
+}
+:is(html.no-anim, html.reduced-motion) .site-header::before,
+:is(html.no-anim, html.reduced-motion) .site-header .brand { transition: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  html :is([data-hero-fade], .split-word__inner, .split-char, .split-line__inner, .split-whole, .hero__script, .hero__bold, .hero__outline, [data-printer]),
+  html :is([data-reveal], [data-stagger] > *, [data-split], [data-develop] .photo__img, [data-printer] .printer__strip) {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    filter: none !important;
+    animation: none !important;
+  }
+  html .hero__outline { color: var(--color-cream, #FBF4F1) !important; -webkit-text-stroke: 0 !important; }
+  html .hero__outline::after { display: none !important; animation: none !important; }
+  html .site-header::before,
+  html .site-header .brand { transition: none !important; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Safety nets for the per section entrances (no-anim / reduced motion) */
+/* ------------------------------------------------------------------ */
+
+:is(html.no-anim, html.reduced-motion) [data-ax],
+:is(html.no-anim, html.reduced-motion) [data-ax] .step__num {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+:is(html.no-anim, html.reduced-motion) :is([data-ax] path, .ax-faq-tick path) {
+  stroke-dashoffset: 0 !important;
+  animation: none !important;
+}
+:is(html.no-anim, html.reduced-motion) .ax-flash { display: none !important; }
+:is(html.no-anim, html.reduced-motion) :is(.form__status, .form__error, .form__field .form__input) { animation: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  html [data-ax],
+  html [data-ax] .step__num {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  html :is([data-ax] path, .ax-faq-tick path) {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+  html .ax-flash { display: none !important; }
+  html :is(.form__status, .form__error, .form__field .form__input) { animation: none !important; }
+}
